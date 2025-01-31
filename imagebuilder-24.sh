@@ -515,7 +515,7 @@ rebuild_firmware() {
     luci-mod-status luci-mod-system luci-proto-ipv6 luci-proto-ppp"
     
     # Modem Tools
-    PACKAGES+=" modeminfo luci-app-modeminfo atinout modemband luci-app-modemband sms-tool luci-app-sms-tool-js picocom minicom"
+    PACKAGES+=" atinout modemband luci-app-modemband sms-tool luci-app-sms-tool-js picocom minicom"
     
     # Tunnel option
     OPENCLASH="coreutils-nohup bash dnsmasq-full ca-certificates ipset ip-full libcap libcap-bin ruby ruby-yaml kmod-tun kmod-inet-diag kmod-nft-tproxy luci-app-openclash"
@@ -537,7 +537,7 @@ rebuild_firmware() {
     # Misc and some custom .ipk files
     misc+=" luci-app-temp-status luci-theme-argon luci-app-3ginfo-lite luci-app-ipinfo luci-app-tailscale luci-theme-alpha luci-app-mmconfig luci-app-droidnet"
     
-    PACKAGES+=" $misc boost-system boost-python3 python3 zram-swap httping lolcat screen openssh-sftp-server adb luci-app-poweroff luci-app-ramfree luci-app-ttyd luci-app-tinyfm"
+    PACKAGES+=" $misc boost-system httping lolcat screen openssh-sftp-server adb luci-app-poweroff luci-app-ramfree luci-app-ttyd luci-app-tinyfm"
     
     if [ "$op_target" == "rpi-4b" ]; then
         misc+=" kmod-i2c-bcm2835 i2c-tools kmod-i2c-core kmod-i2c-gpio luci-app-oled"
@@ -557,10 +557,10 @@ rebuild_firmware() {
     # Exclude package (must use - before packages name)
     EXCLUDED+=" -libgd"
     if [ "${op_sourse}" == "openwrt" ]; then
-    	PACKAGES+=" wpad-openssl iw iwinfo wireless-regdb kmod-cfg80211 kmod-mac80211" #Package WIFI ON
+    	PACKAGES+=" wpad-openssl iw iwinfo wireless-regdb kmod-cfg80211 kmod-mac80211"
         EXCLUDED+=" -dnsmasq"
     elif [ "${op_sourse}" == "immortalwrt" ]; then
-    	PACKAGES+=" wpad-openssl iw iwinfo wifi-scripts wireless-regdb kmod-cfg80211 kmod-mac80211" #Package WIFI ON
+    	PACKAGES+=" wpad-openssl iw iwinfo wifi-scripts wireless-regdb kmod-cfg80211 kmod-mac80211"
         EXCLUDED+=" -dnsmasq -automount -libustream-openssl -default-settings-chn -luci-i18n-base-zh-cn"
         if [ "$ARCH_2" == "x86_64" ]; then
         EXCLUDED+=" -kmod-usb-net-rtl8152-vendor"
