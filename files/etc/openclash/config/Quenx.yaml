@@ -1,0 +1,180 @@
+proxy-providers:
+  ID:
+    type: file
+    path: "./proxy_provider/id.yaml"
+    health-check:
+      enable: true
+      url: http://www.gstatic.com/generate_204
+      interval: '100'
+  MIX:
+    type: file
+    path: "./proxy_provider/mix.yaml"
+    health-check:
+      enable: true
+      url: http://www.gstatic.com/generate_204
+      interval: '100'
+proxy-groups:
+- name: Auto-ID_MIX
+  type: fallback
+  disable-udp: false
+  use:
+  - ID
+  - MIX
+  url: http://www.gstatic.com/generate_204
+  interval: '100'
+  tolerance: '50'
+- name: Load-MIX_ID
+  type: load-balance
+  strategy: consistent-hashing
+  disable-udp: false
+  use:
+  - MIX
+  - ID
+  url: http://www.gstatic.com/generate_204
+  interval: '100'
+  tolerance: '50'
+- name: Server-UMUM
+  type: select
+  disable-udp: false
+  proxies:
+  - Load-MIX_ID
+  - Auto-ID_MIX
+- name: Server-INDO
+  type: select
+  disable-udp: false
+  proxies:
+  - Auto-ID_MIX
+- name: Block-IKLAN
+  type: select
+  disable-udp: false
+  proxies:
+  - REJECT
+  - Load-MIX_ID
+  - Auto-ID_MIX
+- name: Server-GAME
+  type: select
+  disable-udp: false
+  proxies:
+  - Auto-ID_MIX
+port: 7890
+socks-port: 7891
+mixed-port: 7893
+mode: rule
+log-level: silent
+allow-lan: true
+unified-delay: true
+external-controller: 0.0.0.0:9090
+secret: xidz
+bind-address: 0.0.0.0
+external-ui: ui
+tcp-concurrent: true
+dns:
+  enable: true
+  ipv6: true
+  enhanced-mode: redir-host
+  listen: 0.0.0.0:1053
+  proxy-server-nameserver:
+    - https://dns.google/dns-query
+    - https://dns.cloudflare.com/dns-query
+  nameserver:
+    - 8.8.8.8
+    - 1.1.1.1
+    - https://dns.google/dns-query
+  fallback:
+    - 8.8.4.4
+    - 1.0.0.1
+    - https://dns.cloudflare.com/dns-query
+  fallback-filter:
+    geoip: false
+    ipcidr:
+    - 0.0.0.0/8
+    - 10.0.0.0/8
+    - 100.64.0.0/10
+    - 127.0.0.0/8
+    - 169.254.0.0/16
+    - 172.16.0.0/12
+    - 192.0.0.0/24
+    - 192.0.2.0/24
+    - 192.88.99.0/24
+    - 192.168.0.0/16
+    - 198.18.0.0/15
+    - 198.51.100.0/24
+    - 203.0.113.0/24
+    - 224.0.0.0/4
+    - 240.0.0.0/4
+    - 255.255.255.255/32
+ipv6: false
+profile:
+  store-selected: true
+rules:
+- RULE-SET,Game,Server-GAME
+- RULE-SET,PortGame,Server-GAME
+- RULE-SET,Umum,Server-UMUM
+- RULE-SET,indo,Server-INDO
+- RULE-SET,Sosmed,Server-INDO
+- RULE-SET,Streaming,Server-UMUM
+- RULE-SET,Bankid,Server-INDO
+- RULE-SET,Tiktok,Server-UMUM
+- RULE-SET,Meta,Server-INDO
+- RULE-SET,Block,Block-IKLAN
+- RULE-SET,PortLive,Server-UMUM
+rule-providers:
+  Game:
+    type: file
+    behavior: classical
+    path: "./rule_provider/game.yaml"
+  PortGame:
+    type: file
+    behavior: classical
+    path: "./rule_provider/portgame.yaml"
+  Umum:
+    type: file
+    behavior: classical
+    path: "./rule_provider/umum.yaml"
+  indo:
+    type: file
+    behavior: classical
+    path: "./rule_provider/indo.yaml"
+  Sosmed:
+    type: file
+    behavior: classical
+    path: "./rule_provider/sosmed.yaml"
+  Streaming:
+    type: file
+    behavior: classical
+    path: "./rule_provider/streaming.yaml"
+  Bankid:
+    type: file
+    behavior: domain
+    path: "./rule_provider/bankid.yaml"
+  Tiktok:
+    type: file
+    behavior: domain
+    path: "./rule_provider/tiktok.yaml"
+  Meta:
+    type: file
+    behavior: domain
+    path: "./rule_provider/meta.yaml"
+  Block:
+    type: file
+    behavior: classical
+    path: "./rule_provider/block.yaml"
+  PortLive:
+    type: file
+    behavior: classical
+    path: "./rule_provider/portlive.yaml"
+sniffer:
+  enable: true
+  parse-pure-ip: true
+tun:
+  enable: true
+  stack: mixed
+#Untuk Neko Tools Bagian Bawah True#
+  auto-route: false
+  auto-detect-interface: false
+  dns-hijack:
+    - tcp://8.8.8.8:53
+    - tcp://8.8.4.4:53
+# Settingan Ini Wajib Enable METACORE #
+# OPENCLASH #
+# OPENWRT INDONESIA #

@@ -1,0 +1,6 @@
+
+config ipinfo 'config'
+	option enable '0'
+	list isp 'ip'
+	list isp 'name'
+	list loc 'country'

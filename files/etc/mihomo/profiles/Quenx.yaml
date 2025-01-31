@@ -1,0 +1,203 @@
+redir-port: 7891
+tproxy-port: 7892
+port: 8080
+socks-port: 1080
+mixed-port: 7890
+mode: rule
+log-level: silent
+allow-lan: true
+external-controller: 0.0.0.0:9090
+secret: xidz
+external-ui: "ui"
+external-ui-name: dashboard
+external-ui-url: https://mirror.ghproxy.com/https://github.com/MetaCubeX/Yacd-meta/archive/refs/heads/gh-pages.zip
+ipv6: true
+geodata-mode: true
+geodata-loader: memconservative
+geox-url:
+  geosite: https://github.com/rtaserver/meta-rules-dat/releases/download/latest/geosite.dat
+  mmdb: https://github.com/rtaserver/meta-rules-dat/releases/download/latest/geoip.metadb
+  geoip: https://github.com/rtaserver/meta-rules-dat/releases/download/latest/geoip.dat
+  asn: https://mirror.ghproxy.com/https://github.com/MetaCubeX/meta-rules-dat/releases/download/latest/GeoLite2-ASN.mmdb
+geo-auto-update: true
+geo-update-interval: 24
+global-client-fingerprint: chrome
+keep-alive-interval: 15
+keep-alive-idle: 600
+find-process-mode: off
+hosts:
+  localhost:
+    - 127.0.0.1
+    - ::1
+dns:
+  enable: true
+  ipv6: true
+  enhanced-mode: redir-host
+  listen: 0.0.0.0:1053
+  proxy-server-nameserver:
+    - https://dns.google/dns-query
+    - https://dns.cloudflare.com/dns-query
+  nameserver:
+    - 8.8.8.8
+    - 1.1.1.1
+    - https://dns.google/dns-query
+  fallback:
+    - 8.8.4.4
+    - 1.0.0.1
+    - https://dns.cloudflare.com/dns-query
+  respect-rules: true
+  fake-ip-range: 198.18.0.1/16
+  prefer-h3: true
+  use-system-hosts: true
+  use-hosts: true
+  nameserver-policy:
+    geoip:id:
+      - https://dns.cloudflare.com/dns-query
+      - https://dns.google/dns-query
+    geosite:geolocation-!cn:
+      - https://dns.cloudflare.com/dns-query
+      - https://dns.google/dns-query
+sniffer:
+  enable: true
+  force-dns-mapping: true
+  parse-pure-ip: true
+tun:
+  enable: false
+  stack: system
+  device: mihomo
+  dns-hijack:
+    - tcp://any:53
+  gso: true
+  gso-max-size: 65536
+  auto-route: false
+  auto-detect-interface: false
+  auto-redirect: false
+  strict-route: false
+  mtu: 9000
+  endpoint-independent-nat: false
+profile:
+  store-selected: true
+  store-fake-ip: true
+proxy-groups:
+- name: Auto-ID_MIX
+  type: fallback
+  disable-udp: false
+  use:
+  - ID
+  - MIX
+  url: http://www.gstatic.com/generate_204
+  interval: '100'
+  tolerance: '50'
+- name: Load-MIX_ID
+  type: load-balance
+  strategy: consistent-hashing
+  disable-udp: false
+  use:
+  - MIX
+  - ID
+  url: http://www.gstatic.com/generate_204
+  interval: '100'
+  tolerance: '50'
+- name: Server-UMUM
+  type: select
+  disable-udp: false
+  proxies:
+  - Load-MIX_ID
+  - Auto-ID_MIX
+- name: Server-INDO
+  type: select
+  disable-udp: false
+  proxies:
+  - Auto-ID_MIX
+- name: Block-IKLAN
+  type: select
+  disable-udp: false
+  proxies:
+  - REJECT
+  - Load-MIX_ID
+  - Auto-ID_MIX
+- name: Block-PORN
+  type: select
+  disable-udp: false
+  proxies:
+  - REJECT
+  - Load-MIX_ID
+- name: Server-GAME
+  type: select
+  disable-udp: false
+  proxies:
+  - Auto-ID_MIX
+proxy-providers:
+  ID:
+    type: file
+    path: "./proxy_provider/id.yaml"
+    health-check:
+      enable: true
+      url: http://www.gstatic.com/generate_204
+      interval: '100'
+  MIX:
+    type: file
+    path: "./proxy_provider/mix.yaml"
+    health-check:
+      enable: true
+      url: http://www.gstatic.com/generate_204
+      interval: '100'   
+rule-providers:
+  PortGame:
+    type: file
+    behavior: classical
+    path: "./rule_provider/portgame.yaml"
+  PortLive:
+    type: file
+    behavior: classical
+    path: "./rule_provider/portlive.yaml" 
+  Direct:
+    type: file
+    behavior: classical
+    path: "./rule_provider/direct.yaml"
+  Umum:
+    type: file
+    behavior: classical
+    path: "./rule_provider/umum.yaml"
+  Reject:
+    type: file
+    behavior: classical
+    path: "./rule_provider/reject.yaml"
+  Indo:
+    type: http
+    path: "./rule_provider/indo.yaml"
+    url: https://raw.githubusercontent.com/rtaserver/Clash-Rule-IP-Indo/main/rule-indo.yaml
+    interval: 300
+    proxy: FL-ID
+    behavior: classical
+    format: yaml
+rules:
+  - DST-PORT,123/136/137-139,Server-UMUM,udp
+  - RULE-SET,PortGame,Server-GAME
+  - RULE-SET,PortLive,Server-INDO
+  - RULE-SET,Direct,Server-GAME
+  - RULE-SET,Reject,Block-IKLAN
+  - AND,((NETWORK,udp),(OR,((DST-PORT,443),(GEOSITE,youtube)))),REJECT
+  - AND,((GEOSITE,oisd-full),(NOT,((DOMAIN-SUFFIX,googlesyndication.com)))),Block-IKLAN
+  - AND,((GEOSITE,rule-ads),(NOT,((DOMAIN-SUFFIX,googlesyndication.com)))),Block-IKLAN
+  - GEOSITE,oisd-nsfw,Block-PORN
+  - GEOIP,GOOGLE,Server-UMUM
+  - GEOSITE,GOOGLE,Server-UMUM
+  - AND,((NETWORK,TCP),(DST-PORT,5228-5230),(OR,((DOMAIN-KEYWORD,google)))),Server-UMUM
+  - AND,((NETWORK,UDP),(DST-PORT,5228-5230),(OR,((DOMAIN-KEYWORD,google)))),Server-UMUM
+  - GEOSITE,rule-gaming,Server-GAME
+  - AND,((NOT,((RULE-SET,Umum))),(NETWORK,TCP)),Server-UMUM
+  - AND,((NOT,((RULE-SET,Umum))),(NETWORK,UDP)),Server-UMUM
+  - GEOSITE,rule-indo,Server-INDO
+  - GEOSITE,rule-sosmed,Server-INDO
+  - GEOSITE,rule-streaming,Server-INDO
+  - GEOIP,id,Server-INDO
+  - GEOIP,facebook,Server-INDO
+  - GEOIP,netflix,Server-INDO
+  - GEOIP,telegram,Server-UMUM
+  - GEOIP,twitter,Server-UMUM
+  - RULE-SET,Indo,Server-INDO
+  - GEOSITE,rule-speedtest,Server-UMUM
+  - AND,((RULE-SET,Umum),(NETWORK,TCP)),Server-UMUM
+  - AND,((RULE-SET,Umum),(NETWORK,UDP)),Server-UMUM
+  - MATCH,Server-UMUM

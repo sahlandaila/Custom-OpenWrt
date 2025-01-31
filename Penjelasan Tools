@@ -1,0 +1,11 @@
+[ Notes ]
+• Jika Build Lewat ImageBuilder Cukup Edit Di 
+   - Folder Files
+   - Folder Packages
+   - imagebuilder.sh
+   
+• Jika Build Lewat UloBuilder Cukup Siapkan Link Rootfs / Frimware OpenWrt / Kernel
+
+• Untuk Mod Sdcard Cukup Siapkan Link Frimware OpenWrt Lalu Pilih Tipe Stb Kalian
+
+      • OpenWrt Indonesia • Bocah Deso •
