@@ -1,0 +1,214 @@
+#
+# Copyright (C) 2024 nosignals
+#
+name: UlO-BUILDER
+
+on:
+  workflow_dispatch:
+    inputs:
+      kernel:
+        description: 'Kernel Version'
+        required: true
+        default: '6.6.74-wyref'
+        type: choice
+        options:
+          - 5.4.279
+          - 6.1.104-AW64-DBAI
+          - 6.1.31-AW64-DBAI
+          - 6.6.6-AW64-DBAI
+          - 6.1.66-DBAI
+          - 6.6.66
+          - 6.6.74-wyref
+      devices:
+        description: "Devices"
+        required: true
+        default: "s905x"
+        type: choice
+        options:
+          - s905x
+          - s905x2
+          - s905x3
+          - s905x4
+          - h5-orangepi-zeroplus2
+          - h5-orangepi-zeroplus
+          - h5-orangepi-prime
+          - h5-orangepi-pc2
+          - h6-orangepi-lite2
+          - h6-orangepi-1plus
+          - h6-orangepi-3
+          - h6-orangepi-3lts
+          - h616-orangepi-zero2
+          - h618-orangepi-zero2w
+          - h618-orangepi-zero3
+          - rk3566-orangepi-3b
+          - rk3588-orangepi-5plus
+          - rk3588s-orangepi-5
+      rootfs_size:
+        description: "ROOTFS Size, min 640 (756, 1024, 2048, etc)"
+        required: true
+        default: '640'
+        type: string
+      versi:
+        description: "Repository"
+        required: true
+        default: "ulo2"     
+        type: choice
+        options:
+          - ulo2
+      type_file:
+        description: "Select type file"
+        required: false
+        default: "img.gz"
+        type: choice
+        options:
+          - img.xz
+          - img.gz
+      img_url:
+        description: "Set the url img file"
+        required: true
+        default: "https://github.com/bocahdeso/Custom-OpenWrt/releases/download/Openwrt_openwrt_24.10.0-rc7/openwrt_amlogic_s905x_k5.15.177_2025.01.30.img.gz"
+        type: string
+      rename_rootfs:
+        description: "ganti nama rootfs"
+        required: true
+        default: "Xidzwrt24.10.0"
+        type: string 
+      kernel_url:
+        description: "6.6.74-wyref , 6.6.74-x4"
+        required: false
+        default: "https://drive.google.com/file/d/154a1CtZJIA0n8HbO6DtbzJ63KLetUgVG/view?usp=drivesdk"
+        type: choice
+        options:
+          - https://drive.google.com/file/d/154a1CtZJIA0n8HbO6DtbzJ63KLetUgVG/view?usp=drivesdk
+          - https://drive.google.com/file/d/15r1CvfEh_EUFG7kbgUb8w2ANmX7ASPLq/view?usp=drivesdk
+env:
+  TZ: Asia/Jakarta    
+jobs: 
+  build_ipk:
+    permissions:
+      contents: write
+    name: Ulo-Builder
+    runs-on: ubuntu-latest
+    steps:
+      
+      - name: Cleanup and Installing Prerequisites
+        env:
+          DEBIAN_FRONTEND: noninteractive
+        run: |
+          sudo rm -rf /etc/apt/sources.list.d/* /usr/share/dotnet /usr/local/lib/android /opt/ghc
+          sudo -E apt-get update
+          sudo -E apt-get -y install lolcat build-essential clang flex bison g++ gawk gcc-multilib g++-multilib gettext git libncurses-dev libssl-dev python3-distutils rsync unzip zlib1g-dev file wget
+          sudo -E apt-get -y autoremove --purge
+          sudo -E apt-get clean
+          sudo -E apt-get -y install wget python3
+          sudo pip3 install gdown
+          sudo timedatectl set-timezone "$TZ"
+          sudo pip3 install git+https://github.com/Juvenal-Yescas/mediafire-dl
+          wget https://mega.nz/linux/repo/xUbuntu_20.04/amd64/megacmd-xUbuntu_20.04_amd64.deb && sudo apt install "$PWD/megacmd-xUbuntu_20.04_amd64.deb"
+          
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - name: Mengatur tanggal
+        id: date
+        run: echo "date=$(date +'%d-%m-%y %H:%M:%S')" >> $GITHUB_OUTPUT
+   
+      - name: Download kernel
+        run: |
+           if [ $(echo ${{ github.event.inputs.kernel_url }} | grep "drive.") ]; then
+           if [ $(echo ${{ github.event.inputs.kernel_url }} | awk -F "/" '{print $6}') ]; then
+            link_gdrive=$(echo ${{ github.event.inputs.kernel_url }} | awk -F "/" '{print $6}')
+           else
+            link_gdrive=$(echo ${{ github.event.inputs.kernel_url }} | awk -F "/" '{print $4}' | awk -F "?id=" '{print $2}'|awk -F "&export" '{print $1}')
+           fi
+           sudo gdown ${link_gdrive} -O build/file.zip
+           else
+           if [ $(echo ${{ github.event.inputs.kernel_url }} | grep "mediafire.com") ]; then
+            sudo mediafire-dl ${{ github.event.inputs.kernel_url }} -o build/file.zip
+            else
+            if [ $(echo ${{ github.event.inputs.kernel_url }} | grep "mega.nz") ]; then
+              file_mega=$(sudo mega-get ${{ github.event.inputs.kernel_url }} | awk -F: '{print $2}')
+              sudo mv ${file_mega} build/file.zip
+            else
+              sudo wget --no-check-certificate ${{ github.event.inputs.kernel_url }} -O build/file.zip
+            fi
+           fi
+           fi    
+      - name: Download file ${{ github.event.inputs.type_file }}
+        run: |
+           if [ $(echo ${{ github.event.inputs.img_url }} | grep "drive.") ]; then
+           if [ $(echo ${{ github.event.inputs.img_url }} | awk -F "/" '{print $6}') ]; then
+            link_gdrive=$(echo ${{ github.event.inputs.img_url }} | awk -F "/" '{print $6}')
+           else
+            link_gdrive=$(echo ${{ github.event.inputs.img_url }} | awk -F "/" '{print $4}' | awk -F "?id=" '{print $2}'|awk -F "&export" '{print $1}')
+           fi
+           sudo gdown ${link_gdrive} -O build/file.${{ github.event.inputs.type_file }}
+           else
+           if [ $(echo ${{ github.event.inputs.img_url }} | grep "mediafire.com") ]; then
+            sudo mediafire-dl ${{ github.event.inputs.img_url }} -o build/file.${{ github.event.inputs.type_file }}
+            else
+            if [ $(echo ${{ github.event.inputs.img_url }} | grep "mega.nz") ]; then
+              file_mega=$(sudo mega-get ${{ github.event.inputs.img_url }} | awk -F: '{print $2}')
+              sudo mv ${file_mega} build/file.${{ github.event.inputs.type_file }}
+            else
+              sudo wget --no-check-certificate ${{ github.event.inputs.img_url }} -O build/file.${{ github.event.inputs.type_file }}
+            fi
+           fi
+           fi
+      - name: Extract kernel
+        id: kernel
+        run: |  
+             cd build
+             unzip file.zip -d /home/runner/work/Custom-OpenWrt/Custom-OpenWrt/core/kernel/
+      - name: Extract firmware
+        id: extract
+        run: |  
+             cd build
+             sudo mkdir -p boot rootfs img
+             if [ ${{ github.event.inputs.type_file }} = "img.gz" ]; then
+             sudo gunzip file.img.gz
+             else
+             sudo unxz file.img.xz
+             fi
+             los=$(sudo losetup -fP --show file.img)
+             sudo mount ${los}p2 rootfs
+             (cd rootfs && sudo tar cfz /home/runner/work/Custom-OpenWrt/Custom-OpenWrt/rootfs/${{ inputs.rename_rootfs }}.tar.gz *)
+      - name: Building OpenWrt
+        run: |
+          sudo chmod +x ulo2
+          sudo ./${{ inputs.versi }} -m ${{ inputs.devices }} -k ${{ inputs.kernel }} -s ${{ inputs.rootfs_size }}
+          
+      - name: Creating Package Artifact
+        run: |
+          mkdir -p ./artifact
+          cp -rf ./out/${{ inputs.devices }}/* ./artifact/
+          cp -rf ./rootfs/*.tar.gz ./artifact/
+          
+      - name: Delivering Package
+        uses: actions/upload-artifact@v4
+        with:
+          name: openwrt_package
+          path: ./artifact/*
+          
+      - name: Upload the release asset
+        uses: ncipollo/release-action@main
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          file: ./artifact/*
+          tag: ${{ inputs.devices }}
+          file_glob: true
+          overwrite: true
+          body: |
+            ##  OpenWRT Release for ${{ inputs.devices }} devices
+            ULO-Builder Release from Github Workflow
+            ### OpenWrt Image Information
+            - Firmware Details : 
+              - Tanggal Build: ${{ steps.date.outputs.date }}
+              - Devices type : ${{ inputs.devices }}
+              - Kernel version : ${{ inputs.kernel }}
+              - ROOTFS File : ${{ inputs.rename_rootfs }}
+              - ROOTFS Size : ${{ inputs.rootfs_size }} MB
+            - Firmware Information : 
+              - ${{ inputs.fwinfo }}
