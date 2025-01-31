@@ -515,7 +515,7 @@ rebuild_firmware() {
     luci-mod-status luci-mod-system luci-proto-ipv6 luci-proto-ppp"
     
     # Modem Tools
-    PACKAGES+=" atinout modemband luci-app-modemband sms-tool luci-app-sms-tool-js picocom minicom"
+    PACKAGES+=" atinout modeminfo luci-app-modeminfo modemband luci-app-modemband sms-tool luci-app-sms-tool-js picocom minicom"
     
     # Tunnel option
     OPENCLASH="coreutils-nohup bash dnsmasq-full ca-certificates ipset ip-full libcap libcap-bin ruby ruby-yaml kmod-tun kmod-inet-diag kmod-nft-tproxy luci-app-openclash"
