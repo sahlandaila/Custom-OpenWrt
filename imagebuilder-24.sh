@@ -503,7 +503,7 @@ rebuild_firmware() {
     echo -e "${STEPS} Start building OpenWrt with Image Builder..."
     
     PACKAGES+=" file kmod-usb-net-rtl8150 kmod-usb-net-rtl8152 kmod-usb-net-asix kmod-usb-net-asix-ax88179"
-    PACKAGES+=" usbutils usb-modeswitch kmod-mii kmod-usb-kmod-usb-net kmod-usb-wdm kmod-usb-net-cdc-ether kmod-usb-serial kmod-usb-serial-option \
+    PACKAGES+=" usbutils usb-modeswitch kmod-mii kmod-usb-net kmod-usb-wdm kmod-usb-net-cdc-ether kmod-usb-serial kmod-usb-serial-option \
     kmod-usb-core kmod-usb-storage kmod-usb-storage-uas kmod-usb-uhci kmod-usb-ohci kmod-usb2 kmod-usb-ehci kmod-usb3 \
     kmod-usb-net-huawei-cdc-ncm kmod-usb-net-cdc-ncm kmod-usb-net-rndis kmod-usb-net-sierrawireless kmod-usb-acm comgt comgt-ncm luci-proto-ncm \
     kmod-usb-serial-qualcomm kmod-usb-serial-wwan kmod-usb-net-qmi-wwan wwan libqmi libmbim uqmi qmi-utils luci-proto-qmi kmod-usb-net-cdc-mbim umbim luci-proto-mbim \
