@@ -145,6 +145,10 @@ sed -i -e '/12d1:15c1/,+5d' /etc/usb-mode.json
 msg "remove dw5821e usb-modeswitch"
 sed -i -e '/413c:81d7/,+5d' /etc/usb-mode.json
 
+# remove t99w175 usb-modeswitch"
+msg "remove t99w175 usb-modeswitch"
+sed -i -e '/1e2d:00b7/,+5d' /etc/usb-mode.json
+
 # Setup Auto Vnstat Database Backup
 msg "Setup Auto Vnstat Database Backup"
 sed -i 's/;DatabaseDir "\/var\/lib\/vnstat"/DatabaseDir "\/etc\/vnstat"/' /etc/vnstat.conf
